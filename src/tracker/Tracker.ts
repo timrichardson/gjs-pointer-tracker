@@ -25,7 +25,7 @@ export class Tracker {
   private settingsSub: SettingsSubscriber;
 
   private fadeOutTransition: Clutter.Transition;
-  private fadeOutTimeout: GLib.Source | null;
+  private fadeOutTimeout: GLib.Source | null = null;
 
   constructor(private settings: Gio.Settings) {
     this.settingsSub = new SettingsSubscriber(settings);
@@ -70,6 +70,7 @@ export class Tracker {
         );
       } else {
         this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
+        this.fadeOutTimeout = null;
       }
     });
   }
@@ -120,6 +121,7 @@ export class Tracker {
       this.pointerListener = null;
 
       this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
+      this.fadeOutTimeout = null;
     }
   }
 
@@ -130,6 +132,7 @@ export class Tracker {
     this.fadeOutTransition.stop();
     this.widget.opacity = 255;
     this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
+    this.fadeOutTimeout = null;
     if (this.shouldFadeOut()) {
       const timeoutMs = this.settingsSub.settings.get_int(
         'tracker-idle-fade-timeout',
