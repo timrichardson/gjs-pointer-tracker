@@ -39,6 +39,24 @@
       <description>Sets the opacity of the tracker from 0 (transparent) to 100 (opaque).</description>
     </key>
 
+    <key name='tracker-idle-fade-active' type='b'>
+      <default>false</default>
+      <summary>Active state of the tracker</summary>
+      <description>Sets the active state of the tracker.</description>
+    </key>
+
+    <key name='tracker-idle-fade-timeout' type='i'>
+      <default>1000</default>
+      <summary>Inactivity timeout before the tracker fades out</summary>
+      <description>Sets the inactivity timeout, after which the tracker starts fading out. (0 for infinity)</description>
+    </key>
+
+    <key name='tracker-idle-fade-duration' type='i'>
+      <default>1500</default>
+      <summary>Fade out transition duration of the tracker</summary>
+      <description>Sets the transition duration that it takes the tracker to fade out.</description>
+    </key>
+
     <key name='tracker-active' type='b'>
       <default>false</default>
       <summary>Active state of the tracker</summary>

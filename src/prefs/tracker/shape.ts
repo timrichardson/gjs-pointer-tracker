@@ -4,14 +4,14 @@ import Gtk from 'gi://Gtk';
 import { gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { TrackerShape } from '../schema/TrackerShape.js';
 
-export function makeShapeRow(settings: Gio.Settings, circleRows: Gtk.Widget[]) {
+export function makeShapeRow(settings: Gio.Settings, condRows: Gtk.Widget[]) {
   const shapeLabelList = new Gtk.StringList();
   shapeLabelList.append(_('Circle'));
   shapeLabelList.append(_('Cursor'));
 
   function updateCircleRows(shape: TrackerShape) {
-    for (const circleRow of circleRows) {
-      circleRow.set_sensitive(shape === TrackerShape.CIRCLE);
+    for (const condRow of condRows) {
+      condRow.set_sensitive(shape === TrackerShape.CIRCLE);
     }
   }
 

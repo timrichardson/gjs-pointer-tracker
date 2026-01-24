@@ -1,4 +1,7 @@
+import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 // @ts-ignore
 import { getPointerWatcher } from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
@@ -21,6 +24,9 @@ export class Tracker {
 
   private settingsSub: SettingsSubscriber;
 
+  private fadeOutTransition: Clutter.Transition;
+  private fadeOutTimeout: GLib.Source | null;
+
   constructor(private settings: Gio.Settings) {
     this.settingsSub = new SettingsSubscriber(settings);
 
@@ -28,6 +34,44 @@ export class Tracker {
       this.updateShape(),
     );
     this.updateShape();
+
+    this.fadeOutTransition = new Clutter.PropertyTransition({
+      property_name: 'opacity',
+      duration: this.settingsSub.settings.get_int('tracker-idle-fade-duration'),
+      progress_mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+    });
+    function uintValue(value: number) {
+      const v = new GObject.Value();
+      v.init(GObject.TYPE_UINT);
+      v.set_uint(value);
+      return v;
+    }
+    this.fadeOutTransition.set_from(uintValue(255));
+    this.fadeOutTransition.set_to(uintValue(0));
+    this.settingsSub.connect('changed::tracker-idle-fade-duration', () => {
+      const duration = this.settingsSub.settings.get_int(
+        'tracker-idle-fade-duration',
+      );
+      this.fadeOutTransition.set_duration(duration);
+    });
+    this.widget.add_transition('fade-out', this.fadeOutTransition);
+
+    this.settingsSub.connect('changed::tracker-idle-fade-active', () => {
+      const active = this.settingsSub.settings.get_boolean(
+        'tracker-idle-fade-active',
+      );
+      if (active) {
+        const timeoutMs = this.settingsSub.settings.get_int(
+          'tracker-idle-fade-timeout',
+        );
+        this.fadeOutTimeout = setTimeout(
+          () => this.fadeOutTransition.start(),
+          timeoutMs,
+        );
+      } else {
+        this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
+      }
+    });
   }
 
   destroy() {
@@ -37,6 +81,13 @@ export class Tracker {
 
     this.setActive(false);
     this.widget.destroy();
+  }
+
+  private shouldFadeOut() {
+    const active = this.settingsSub.settings.get_boolean(
+      'tracker-idle-fade-active',
+    );
+    return active && !(this.shape instanceof Tracker);
   }
 
   setActive(active: boolean) {
@@ -52,17 +103,42 @@ export class Tracker {
       );
       const [initialX, initialY] = global.get_pointer();
       this.updatePosition(initialX, initialY);
+
+      if (this.shouldFadeOut()) {
+        const timeoutMs = this.settingsSub.settings.get_int(
+          'tracker-idle-fade-timeout',
+        );
+        this.fadeOutTimeout = setTimeout(
+          () => this.fadeOutTransition.start(),
+          timeoutMs,
+        );
+      }
     } else {
       Main.layoutManager.uiGroup.remove_child(this.widget);
 
       this.pointerListener?.remove();
       this.pointerListener = null;
+
+      this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
     }
   }
 
   updatePosition(x: number, y: number) {
     this.raiseToTop();
     this.widget.set_position(x, y);
+
+    this.fadeOutTransition.stop();
+    this.widget.opacity = 255;
+    this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
+    if (this.shouldFadeOut()) {
+      const timeoutMs = this.settingsSub.settings.get_int(
+        'tracker-idle-fade-timeout',
+      );
+      this.fadeOutTimeout = setTimeout(
+        () => this.fadeOutTransition.start(),
+        timeoutMs,
+      );
+    }
   }
 
   raiseToTop() {
