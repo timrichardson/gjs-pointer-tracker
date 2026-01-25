@@ -61,16 +61,9 @@ export class Tracker {
         'tracker-idle-fade-active',
       );
       if (active) {
-        const timeoutMs = this.settingsSub.settings.get_int(
-          'tracker-idle-fade-timeout',
-        );
-        this.fadeOutTimeout = setTimeout(
-          () => this.fadeOutTransition.start(),
-          timeoutMs,
-        );
+        this.rescheduleFadeOut();
       } else {
-        this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
-        this.fadeOutTimeout = null;
+        this.unscheduleFadeOut();
       }
     });
   }
@@ -82,13 +75,6 @@ export class Tracker {
 
     this.setActive(false);
     this.widget.destroy();
-  }
-
-  private shouldFadeOut() {
-    const active = this.settingsSub.settings.get_boolean(
-      'tracker-idle-fade-active',
-    );
-    return active && !(this.shape instanceof Tracker);
   }
 
   setActive(active: boolean) {
@@ -106,13 +92,7 @@ export class Tracker {
       this.updatePosition(initialX, initialY);
 
       if (this.shouldFadeOut()) {
-        const timeoutMs = this.settingsSub.settings.get_int(
-          'tracker-idle-fade-timeout',
-        );
-        this.fadeOutTimeout = setTimeout(
-          () => this.fadeOutTransition.start(),
-          timeoutMs,
-        );
+        this.rescheduleFadeOut();
       }
     } else {
       Main.layoutManager.uiGroup.remove_child(this.widget);
@@ -120,8 +100,7 @@ export class Tracker {
       this.pointerListener?.remove();
       this.pointerListener = null;
 
-      this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
-      this.fadeOutTimeout = null;
+      this.unscheduleFadeOut();
     }
   }
 
@@ -131,16 +110,8 @@ export class Tracker {
 
     this.fadeOutTransition.stop();
     this.widget.opacity = 255;
-    this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
-    this.fadeOutTimeout = null;
     if (this.shouldFadeOut()) {
-      const timeoutMs = this.settingsSub.settings.get_int(
-        'tracker-idle-fade-timeout',
-      );
-      this.fadeOutTimeout = setTimeout(
-        () => this.fadeOutTransition.start(),
-        timeoutMs,
-      );
+      this.rescheduleFadeOut();
     }
   }
 
@@ -168,5 +139,29 @@ export class Tracker {
     }
 
     this.widget.add_child(this.shape.widget);
+  }
+
+  private shouldFadeOut() {
+    const active = this.settingsSub.settings.get_boolean(
+      'tracker-idle-fade-active',
+    );
+    return active && !(this.shape instanceof Tracker);
+  }
+
+  private unscheduleFadeOut() {
+    this.fadeOutTimeout && clearTimeout(this.fadeOutTimeout);
+    this.fadeOutTimeout = null;
+  }
+
+  private rescheduleFadeOut() {
+    this.unscheduleFadeOut();
+
+    const timeoutMs = this.settingsSub.settings.get_int(
+      'tracker-idle-fade-timeout',
+    );
+    this.fadeOutTimeout = setTimeout(
+      () => this.fadeOutTransition.start(),
+      timeoutMs,
+    );
   }
 }
