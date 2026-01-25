@@ -69,6 +69,8 @@ export class Tracker {
   }
 
   destroy() {
+    this.unscheduleFadeOut();
+
     this.settingsSub.disconnect();
 
     this.shape?.destroy();
