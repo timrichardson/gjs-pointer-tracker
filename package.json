@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "rm -rf pointer-tracker@garz.dev && tsc && cp -r metadata.json schemas pointer-tracker@garz.dev",
-    "zip": "yarn build && cd pointer-tracker@garz.dev && zip -r ../pointer-tracker@garz.dev.zip .",
+    "zip": "yarn build && cd pointer-tracker@garz.dev && zip -rFS ../pointer-tracker@garz.dev.zip .",
     "disable": "rm -rf ~/.local/share/gnome-shell/extensions/pointer-tracker@garz.dev",
     "enable": "yarn disable && yarn build && cp -r pointer-tracker@garz.dev ~/.local/share/gnome-shell/extensions/ && glib-compile-schemas ~/.local/share/gnome-shell/extensions/pointer-tracker@garz.dev/schemas",
     "test": "yarn enable && env G_MESSAGES_DEBUG='GNOME Shell' dbus-run-session -- gnome-shell --devkit",
