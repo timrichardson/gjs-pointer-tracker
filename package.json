@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "rm -rf pointer-tracker@garz.dev && tsc && cp -r metadata.json schemas pointer-tracker@garz.dev && glib-compile-schemas pointer-tracker@garz.dev/schemas",
+    "build": "rm -rf pointer-tracker@garz.dev && tsc && cp -r metadata.json schemas pointer-tracker@garz.dev",
     "zip": "yarn build && cd pointer-tracker@garz.dev && zip -r ../pointer-tracker@garz.dev.zip .",
     "disable": "rm -rf ~/.local/share/gnome-shell/extensions/pointer-tracker@garz.dev",
-    "enable": "yarn disable && yarn build && cp -r pointer-tracker@garz.dev ~/.local/share/gnome-shell/extensions/",
+    "enable": "yarn disable && yarn build && cp -r pointer-tracker@garz.dev ~/.local/share/gnome-shell/extensions/ && glib-compile-schemas ~/.local/share/gnome-shell/extensions/pointer-tracker@garz.dev/schemas",
     "test": "yarn enable && env G_MESSAGES_DEBUG='GNOME Shell' dbus-run-session -- gnome-shell --devkit",
     "ncu": "ncu -u",
     "lint": "prettier --check . && eslint -c eslint-cli.config.js --max-warnings 0",
