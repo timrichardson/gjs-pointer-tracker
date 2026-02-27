@@ -8,6 +8,12 @@
     <value value='1' nick='cursor' />
   </enum>
 
+  <enum id='org.gnome.shell.extensions.pointer-tracker.tracker-click-visibility'>
+    <value value='0' nick='never' />
+    <value value='1' nick='only' />
+    <value value='2' nick='as-well' />
+  </enum>
+
   <!-- Settings -->
 
   <schema id='org.gnome.shell.extensions.pointer-tracker'
@@ -31,6 +37,25 @@
       <default>'#bf4040'</default>
       <summary>Color of the tracker</summary>
       <description>Sets the color of the tracker.</description>
+    </key>
+
+    <key name='tracker-click-visibility' enum='org.gnome.shell.extensions.pointer-tracker.tracker-click-visibility'>
+      <default>'as-well'</default>
+      <summary>Visibility of click feedback</summary>
+      <description>Controls when click feedback is shown: never, only click feedback, or as well as the tracker.</description>
+    </key>
+
+    <key name='tracker-click-color' type='s'>
+      <default>'#ffeb3b'</default>
+      <summary>Color of click feedback</summary>
+      <description>Sets the color used for click feedback.</description>
+    </key>
+
+    <key name='tracker-click-duration' type='i'>
+      <default>250</default>
+      <range min='20' max='5000' />
+      <summary>Duration of click feedback</summary>
+      <description>Sets the duration of click feedback in milliseconds.</description>
     </key>
 
     <key name='tracker-opacity' type='i'>

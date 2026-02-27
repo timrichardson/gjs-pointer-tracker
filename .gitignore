@@ -24,3 +24,13 @@ pnpm-debug.log*
 
 # Misc
 .DS_Store
+
+# Agent tooling
+AGENTS.md
+.opencode/
+.opencode.json
+.opencode.jsonc
+.opencode.yaml
+.opencode.yml
+.opencode.toml
+/docs/

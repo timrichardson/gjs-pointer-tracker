@@ -32,6 +32,10 @@ export class Cursor implements Shape {
     this.subscriptions.forEach((s) => this.shellTracker.disconnect(s));
   }
 
+  onPointerButtonPress(_button: number) {
+    return false;
+  }
+
   private update() {
     const texture = this.shellTracker.get_sprite();
     if (!this.shellTracker.get_pointer_visible() || !texture) {

@@ -18,6 +18,7 @@ export class Tracker {
 
   private MIN_WATCHER_INTERVAL = 10;
   private pointerListener: Record<any, any> | null = null;
+  private pointerButtonPressSub: number | null = null;
 
   private widget = makeWidget();
   private shape: Shape | null = null;
@@ -70,6 +71,7 @@ export class Tracker {
 
   destroy() {
     this.unscheduleFadeOut();
+    this.unsubscribePointerButtonPress();
 
     this.settingsSub.disconnect();
 
@@ -90,6 +92,7 @@ export class Tracker {
         this.MIN_WATCHER_INTERVAL,
         (x: number, y: number) => this.updatePosition(x, y),
       );
+      this.subscribePointerButtonPress();
       const [initialX, initialY] = global.get_pointer();
       this.updatePosition(initialX, initialY);
 
@@ -101,6 +104,7 @@ export class Tracker {
 
       this.pointerListener?.remove();
       this.pointerListener = null;
+      this.unsubscribePointerButtonPress();
 
       this.unscheduleFadeOut();
     }
@@ -110,11 +114,7 @@ export class Tracker {
     this.raiseToTop();
     this.widget.set_position(x, y);
 
-    this.fadeOutTransition.stop();
-    this.widget.opacity = 255;
-    if (this.shouldFadeOut()) {
-      this.rescheduleFadeOut();
-    }
+    this.resetFadeOutState();
   }
 
   raiseToTop() {
@@ -140,7 +140,9 @@ export class Tracker {
         exhausted(shape);
     }
 
-    this.widget.add_child(this.shape.widget);
+    if (this.shape) {
+      this.widget.add_child(this.shape.widget);
+    }
   }
 
   private shouldFadeOut() {
@@ -148,6 +150,14 @@ export class Tracker {
       'tracker-idle-fade-active',
     );
     return active && !(this.shape instanceof Tracker);
+  }
+
+  private resetFadeOutState() {
+    this.fadeOutTransition.stop();
+    this.widget.opacity = 255;
+    if (this.shouldFadeOut()) {
+      this.rescheduleFadeOut();
+    }
   }
 
   private unscheduleFadeOut() {
@@ -165,5 +175,37 @@ export class Tracker {
       () => this.fadeOutTransition.start(),
       timeoutMs,
     );
+  }
+
+  private subscribePointerButtonPress() {
+    if (this.pointerButtonPressSub !== null) {
+      return;
+    }
+
+    this.pointerButtonPressSub = global.stage.connect(
+      'captured-event',
+      (_actor: Clutter.Actor, event: Clutter.Event) => {
+        if (event.type() === Clutter.EventType.BUTTON_PRESS) {
+          if (!this.isActive || !this.shape) {
+            return Clutter.EVENT_PROPAGATE;
+          }
+
+          if (this.shape.onPointerButtonPress(event.get_button())) {
+            this.resetFadeOutState();
+          }
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+      },
+    );
+  }
+
+  private unsubscribePointerButtonPress() {
+    if (this.pointerButtonPressSub === null) {
+      return;
+    }
+
+    global.stage.disconnect(this.pointerButtonPressSub);
+    this.pointerButtonPressSub = null;
   }
 }

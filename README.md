@@ -1,6 +1,7 @@
 # Pointer Tracker
 
 This GNOME extension can highlight the mouse pointer to improve visibility on screencasts.
+Optionally, mouse clicks can cause a secondary highlight.
 
 ## Installation
 
@@ -20,4 +21,5 @@ gnome-session-quit --logout # restart GNOME
 
 ## Development
 
-Run `yarn test` to build and start a nested wayland instance with the new version.
+Run `yarn test` to build and start a nested Wayland instance with the new version.
+In the nested shell, click to confirm the tracker still shows click feedback.
