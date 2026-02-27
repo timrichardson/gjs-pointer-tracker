@@ -1,5 +1,6 @@
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import { makeWidget, setStyles, Styles } from '../gjs/widget.js';
 import { TrackerClickVisibility } from '../prefs/schema/TrackerClickVisibility.js';
@@ -7,6 +8,11 @@ import { SettingsSubscriber } from '../prefs/SettingsSubscriber.js';
 import { Shape } from './Shape.js';
 
 export class Circle implements Shape {
+  private static readonly CLICK_DIAGNOSTICS_ENV =
+    'POINTER_TRACKER_DEBUG_CLICKS';
+  private static readonly CLICK_DIAGNOSTICS_PREFIX =
+    '[Pointer Tracker][Click Diagnostics]';
+
   widget = makeWidget();
 
   private static readonly CLICK_FLASH_DURATION_MAX_MS = 5000;
@@ -22,6 +28,7 @@ export class Circle implements Shape {
   private isClickFlashing = false;
   private clickFlashDurationMs = Circle.CLICK_FLASH_DEFAULT_DURATION_MS;
   private clickFlashTimeout: ReturnType<typeof setTimeout> | null = null;
+  private clickDiagnosticsEnabled = Circle.isClickDiagnosticsEnabled();
 
   constructor(settings: Gio.Settings) {
     this.settingsSub = new SettingsSubscriber(settings);
@@ -70,14 +77,25 @@ export class Circle implements Shape {
     let handled = false;
 
     if (!this.isFlashButton(button)) {
+      this.logClickDiagnostics('ignoring unsupported button', {
+        button,
+      });
       return false;
     }
 
     if (this.clickVisibility === TrackerClickVisibility.NEVER) {
+      this.logClickDiagnostics('click visibility set to NEVER', {
+        button,
+      });
       return false;
     }
 
     handled = true;
+    this.logClickDiagnostics('showing click feedback', {
+      button,
+      clickVisibility: TrackerClickVisibility[this.clickVisibility],
+      clickFlashDurationMs: this.clickFlashDurationMs,
+    });
 
     this.isClickFlashing = true;
     this.renderColor();
@@ -161,5 +179,26 @@ export class Circle implements Shape {
 
     this.styles['background-color'] = color;
     setStyles(this.widget, this.styles);
+  }
+
+  private logClickDiagnostics(
+    message: string,
+    details: Record<string, unknown>,
+  ) {
+    if (!this.clickDiagnosticsEnabled) {
+      return;
+    }
+
+    console.warn(`${Circle.CLICK_DIAGNOSTICS_PREFIX} ${message}`, details);
+  }
+
+  private static isClickDiagnosticsEnabled(): boolean {
+    const envValue = GLib.getenv(Circle.CLICK_DIAGNOSTICS_ENV);
+    if (!envValue) {
+      return false;
+    }
+
+    const normalized = envValue.toLowerCase();
+    return normalized === '1' || normalized === 'true' || normalized === 'yes';
   }
 }
